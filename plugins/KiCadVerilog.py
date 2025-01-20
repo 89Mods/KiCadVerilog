@@ -93,8 +93,8 @@ def verilog_pin_type(type):
         return verilog_type
 
 # Generate a module name for a part
-def verilog_module_name(part):
-    return legal_verilog_name(part.ref)
+def verilog_module_name(schem_name, part):
+    return legal_verilog_name(schem_name) + "_" + legal_verilog_name(part.ref)
 
 # Wrap long lines of code
 def wrap(text):
@@ -144,6 +144,8 @@ def main(argv):
         print('                   If not specified, output will go to stdout.\n')
         print('See https://github.com/galacticstudios/KiCadVerilog for documentation.')
         return logging.get_messages()
+
+    schem_name = os.path.splitext(os.path.basename(input_file).split('/')[-1])[0]
 
     if output_file != None:
         try:
@@ -246,14 +248,14 @@ def main(argv):
     part_refs = list(netlist.parts.keys())
     part_refs.sort(key = lambda item : NetlistObjects.SortableReference(item))
     for part_ref in part_refs:
-        part = netlist.parts[part_ref]
+        part =  netlist.parts[part_ref]
 
         # If it's a pullup or pulldown resistor, or a bypass cap, don't make a
         # module for it.
         if part.is_pullup_resistor() or part.is_pulldown_resistor() or part.is_bypass_cap():
             continue
 
-        module_name = verilog_module_name(part)
+        module_name = verilog_module_name(schem_name, part)
         # invocation_args will be an array of wires corresponding to each pin
         invocation_args = [];
         pins = part.pins.values()
